@@ -72,3 +72,4 @@ Thank you.
 [website]: https://openipc.org/?ref=readme
 [wiki]: https://github.com/openipc/wiki
 Trigger build for SSC335
+Build trigger: 2024-10-10
