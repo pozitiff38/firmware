@@ -1,0 +1,30 @@
+name: Build OpenIPC for SSC335 + RTL8188EU
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # даёт кнопку «Run workflow» в Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git subversion wget bison flex libncurses-dev libssl-dev python3 unzip rsync
+
+      - name: Build firmware
+        run: |
+          export BOARD=ssc335
+          export TARGET=ultimate
+          ./building.sh --board $BOARD --target $TARGET --config br-ext-chip-sigmastar/configs/ssc335_ultimate_defconfig
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openipc-ssc335-rtl8188eu
+          path: output/images/uImage* output/images/rootfs*
