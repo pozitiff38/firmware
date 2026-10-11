@@ -1,7 +1,7 @@
 name: Build OpenIPC SSC335DE (Wi‑Fi RT8188EU)
 
 on:
-  workflow_dispatch:  # кнопка запуска в интерфейсе
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,20 +27,19 @@ jobs:
 
       - name: Enable RTL8188EU + USB support
         run: |
-          sed -i 's/^CONFIG_RTL8188EU=.*$/CONFIG_RTL8188EU=m/' .config
-          sed -i 's/^CONFIG_CFG80211=.*$/CONFIG_CFG80211=y/' .config
-          sed -i 's/^CONFIG_MAC80211=.*$/CONFIG_MAC80211=y/' .config
+          sed -i 's/^CONFIG_RTL8188EU=.*\$/CONFIG_RTL8188EU=m/' .config
+          sed -i 's/^CONFIG_CFG80211=.*\$/CONFIG_CFG80211=y/' .config
+          sed -i 's/^CONFIG_MAC80211=.*\$/CONFIG_MAC80211=y/' .config
 
-          # USB для Wi‑Fi донгла
-          sed -i 's/^CONFIG_USB_EHCI_HCD=.*$/CONFIG_USB_EHCI_HCD=y/' .config
-          sed -i 's/^CONFIG_USB_OHCI_HCD=.*$/CONFIG_USB_OHCI_HCD=y/' .config
-          sed -i 's/^CONFIG_USB_SUPPORT=.*$/CONFIG_USB_SUPPORT=y/' .config
+          sed -i 's/^CONFIG_USB_EHCI_HCD=.*\$/CONFIG_USB_EHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_OHCI_HCD=.*\$/CONFIG_USB_OHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_SUPPORT=.*\$/CONFIG_USB_SUPPORT=y/' .config
 
           make savedefconfig
           mv defconfig .config
 
       - name: Build firmware
-        run: make -j$(nproc)
+        run: make -j\$(nproc)
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
