@@ -20,27 +20,31 @@ jobs:
           sudo apt-get install -y git make wget unzip bison flex libncurses5-dev \
             gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf libssl-dev zlib1g-dev
 
-      - name: Prepare config for SSC335DE
+      - name: Run builder for SSC335DE
+        run: ./builder.sh -p ssc335de
+
+      - name: Enable RTL8188EU + Wi‑Fi stack + USB
         run: |
-          # Запускаем builder.sh с профилем ssc335de — он сам создаст .config
-          ./builder.sh -p ssc335de
+          # Включаем драйвер как модуль
+          sed -i 's/^CONFIG_RTL8188EU=.*$/CONFIG_RTL8188EU=m/' .config
+          # Включаем Wi‑Fi стек
+          sed -i 's/^CONFIG_CFG80211=.*$/CONFIG_CFG80211=y/' .config
+          sed -i 's/^CONFIG_MAC80211=.*$/CONFIG_MAC80211=y/' .config
+          # USB хост (если Wi‑Fi на USB‑донгле)
+          sed -i 's/^CONFIG_USB_EHCI_HCD=.*$/CONFIG_USB_EHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_OHCI_HCD=.*$/CONFIG_USB_OHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_SUPPORT=.*$/CONFIG_USB_SUPPORT=y/' .config
 
-      - name: Enable RTL8188EU + Wi‑Fi stack
-        run: |
-          # Правка конфига после того, как builder.sh его создал
-          sed -i 's/^CONFIG_RTL8188EU=.*\$/CONFIG_RTL8188EU=m/' .config
-          sed -i 's/^CONFIG_CFG80211=.*\$/CONFIG_CFG80211=y/' .config
-          sed -i 's/^CONFIG_MAC80211=.*\$/CONFIG_MAC80211=y/' .config
-
-          # USB для Wi‑Fi донгла
-          sed -i 's/^CONFIG_USB_EHCI_HCD=.*\$/CONFIG_USB_EHCI_HCD=y/' .config
-          sed -i 's/^CONFIG_USB_OHCI_HCD=.*\$/CONFIG_USB_OHCI_HCD=y/' .config
-          sed -i 's/^CONFIG_USB_SUPPORT=.*\$/CONFIG_USB_SUPPORT=y/' .config
-
+          # Сохраняем конфиг
           make savedefconfig
           mv defconfig .config
 
       - name: Build firmware
         run: make -j$(nproc)
 
-      - name: Upload
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openipc-ssc335de-images
+          path: images/*
+          retention-days: 7
