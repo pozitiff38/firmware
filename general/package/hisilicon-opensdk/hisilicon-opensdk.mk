@@ -5,7 +5,7 @@
 ################################################################################
 
 HISILICON_OPENSDK_SITE = $(call github,openipc,openhisilicon,$(HISILICON_OPENSDK_VERSION))
-HISILICON_OPENSDK_VERSION = 4e5359bdba93e5ea01e9481b03b0d8b8ea673202
+HISILICON_OPENSDK_VERSION = f8b6d46282cab6b704a27ddd3d2dd741803528e0
 
 HISILICON_OPENSDK_LICENSE = GPL-3.0
 HISILICON_OPENSDK_LICENSE_FILES = LICENSE
