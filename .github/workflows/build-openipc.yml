@@ -19,16 +19,18 @@ jobs:
           sudo apt-get install -y git make wget unzip bison flex libncurses5-dev \
             gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf libssl-dev zlib1g-dev
 
-      - name: Prepare build
+      - name: Build with default config
+        run: make ssc335de
+
+      - name: Enable RTL8188EU + Wi‑Fi stack
         run: |
-          make ssc335de_defconfig
           sed -i 's/^CONFIG_RTL8188EU=.*\$/CONFIG_RTL8188EU=m/' .config
           sed -i 's/^CONFIG_CFG80211=.*\$/CONFIG_CFG80211=y/' .config
           sed -i 's/^CONFIG_MAC80211=.*\$/CONFIG_MAC80211=y/' .config
           make savedefconfig
           mv defconfig .config
 
-      - name: Build
+      - name: Rebuild firmware
         run: make -j\$(nproc)
 
       - name: Upload artifacts
