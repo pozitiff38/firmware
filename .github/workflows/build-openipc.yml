@@ -1,33 +1,50 @@
-name: Build OpenIPC for SSC335 + RTL8188EU
+name: Build OpenIPC SSC335DE (Wi‑Fi RT8188EU)
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch:  # кнопка запуска в интерфейсе
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Install dependencies
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git subversion wget bison flex libncurses-dev libssl-dev python3 unzip rsync
+          sudo apt-get install -y \
+            git make wget unzip bison flex libncurses5-dev \
+            gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf \
+            libssl-dev zlib1g-dev autoconf automake
+
+      - name: Prepare config
+        run: |
+          make ssc335de_defconfig
+
+      - name: Enable RTL8188EU + USB support
+        run: |
+          sed -i 's/^CONFIG_RTL8188EU=.*$/CONFIG_RTL8188EU=m/' .config
+          sed -i 's/^CONFIG_CFG80211=.*$/CONFIG_CFG80211=y/' .config
+          sed -i 's/^CONFIG_MAC80211=.*$/CONFIG_MAC80211=y/' .config
+
+          # USB для Wi‑Fi донгла
+          sed -i 's/^CONFIG_USB_EHCI_HCD=.*$/CONFIG_USB_EHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_OHCI_HCD=.*$/CONFIG_USB_OHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_SUPPORT=.*$/CONFIG_USB_SUPPORT=y/' .config
+
+          make savedefconfig
+          mv defconfig .config
 
       - name: Build firmware
-        run: |
-          export BOARD=ssc335
-          export TARGET=ultimate
-          ./building.sh --board "$BOARD" --target "$TARGET" --config br-ext-chip-sigmastar/configs/ssc335_ultimate_defconfig
+        run: make -j$(nproc)
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: openipc-ssc335-rtl8188eu
-          path: |
-            output/images/uImage-*
-            output/images/rootfs-*.squashfs
+          name: openipc-ssc335de-images
+          path: images/*
+          retention-days: 7
