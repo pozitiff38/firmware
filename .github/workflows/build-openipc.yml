@@ -1,4 +1,4 @@
-name: Build OpenIPC SSC335DE (Wi‑Fi)
+name: Build OpenIPC SSC335DE (Wi‑Fi RT8188EU)
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo with submodules
         uses: actions/checkout@v4
@@ -19,22 +20,27 @@ jobs:
           sudo apt-get install -y git make wget unzip bison flex libncurses5-dev \
             gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf libssl-dev zlib1g-dev
 
-      - name: Build with default config
-        run: make ssc335de
+      - name: Prepare config for SSC335DE
+        run: |
+          # Запускаем builder.sh с профилем ssc335de — он сам создаст .config
+          ./builder.sh -p ssc335de
 
       - name: Enable RTL8188EU + Wi‑Fi stack
         run: |
+          # Правка конфига после того, как builder.sh его создал
           sed -i 's/^CONFIG_RTL8188EU=.*\$/CONFIG_RTL8188EU=m/' .config
           sed -i 's/^CONFIG_CFG80211=.*\$/CONFIG_CFG80211=y/' .config
           sed -i 's/^CONFIG_MAC80211=.*\$/CONFIG_MAC80211=y/' .config
+
+          # USB для Wi‑Fi донгла
+          sed -i 's/^CONFIG_USB_EHCI_HCD=.*\$/CONFIG_USB_EHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_OHCI_HCD=.*\$/CONFIG_USB_OHCI_HCD=y/' .config
+          sed -i 's/^CONFIG_USB_SUPPORT=.*\$/CONFIG_USB_SUPPORT=y/' .config
+
           make savedefconfig
           mv defconfig .config
 
-      - name: Rebuild firmware
-        run: make -j\$(nproc)
+      - name: Build firmware
+        run: make -j$(nproc)
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: openipc-ssc335de-images
-          path: images/*
+      - name: Upload
